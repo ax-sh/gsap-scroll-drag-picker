@@ -8,8 +8,10 @@ export type PickerProps = {};
 
 class DragScroll {
   iteration = 0; // gets iterated when we scroll all the way to the end or start and wraps around - allows us to smoothly continue the playhead scrubbing in the correct direction.
-  scrub;
+  scrub: gsap.core.Tween;
+  seamlessLoop: gsap.core.Timeline;
   constructor(seamlessLoop: gsap.core.Timeline) {
+    this.seamlessLoop = seamlessLoop;
     const playhead = { offset: 0 }; // a proxy object we use to simulate the playhead position, but it can go infinitely in either direction and we'll just use an onUpdate to convert it to the corresponding time on the seamlessLoop timeline.
     const wrapTime = gsap.utils.wrap(0, seamlessLoop.duration()); // feed in any offset (time) and it'll return the corresponding wrapped time (a safe value between 0 and the seamlessLoop's duration)
     this.scrub = gsap.to(playhead, {
@@ -86,7 +88,7 @@ export default function Picker({}: PickerProps) {
     const trigger = ScrollTrigger.create({
       start: 0,
       onUpdate(self) {
-        let scroll = self.scroll();
+        const scroll = self.scroll();
         if (scroll > self.end - 1) {
           wrap(1, 1);
         } else if (scroll < 1 && self.direction < 0) {
