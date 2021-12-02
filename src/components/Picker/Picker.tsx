@@ -135,16 +135,11 @@ export default function Picker({}: PickerProps) {
       trigger.scroll(scroll);
     }
 
-    document
-      .querySelector(".next")
-      .addEventListener("click", () =>
-        scrollToOffset(scrub.vars.offset + spacing)
-      );
-    document
-      .querySelector(".prev")
-      .addEventListener("click", () =>
-        scrollToOffset(scrub.vars.offset - spacing)
-      );
+    const next = () => scrollToOffset(scrub.vars.offset + spacing);
+    const prev = () => scrollToOffset(scrub.vars.offset - spacing);
+
+    document.querySelector(".next").addEventListener("click", next);
+    document.querySelector(".prev").addEventListener("click", prev);
 
     function buildSeamlessLoop(items, spacing, animateFunc) {
       let rawSequence = gsap.timeline({ paused: true }), // this is where all the "real" animations live
