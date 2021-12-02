@@ -103,12 +103,13 @@ export default function Picker({}: PickerProps) {
       pin: ".gallery",
     });
     // converts a progress value (0-1, but could go outside those bounds when wrapping) into a "safe" scroll value that's at least 1 away from the start or end because we reserve those for sensing when the user scrolls ALL the way up or down, to wrap.
-    const progressToScroll = (progress) =>
-      gsap.utils.clamp(
+    function progressToScroll(progress: number) {
+      return gsap.utils.clamp(
         1,
         trigger.end - 1,
         gsap.utils.wrap(0, 1, progress) * trigger.end
       );
+    }
     function wrap(iterationDelta: number, scrollTo: number) {
       scrubber.iteration += iterationDelta;
       trigger.scroll(scrollTo);
