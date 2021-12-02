@@ -84,29 +84,29 @@ export default function Picker({}: PickerProps) {
     const scrub = scrubber.scrub;
 
     const trigger = ScrollTrigger.create({
-        start: 0,
-        onUpdate(self) {
-          let scroll = self.scroll();
-          if (scroll > self.end - 1) {
-            wrap(1, 1);
-          } else if (scroll < 1 && self.direction < 0) {
-            wrap(-1, self.end - 1);
-          } else {
-            scrub.vars.offset =
-              (scrubber.iteration + self.progress) * seamlessLoop.duration();
-            scrub.invalidate().restart(); // to improve performance, we just invalidate and restart the same tween. No need for overwrites or creating a new tween on each update.
-          }
-        },
-        end: "+=3000",
-        pin: ".gallery",
-      }),
-      // converts a progress value (0-1, but could go outside those bounds when wrapping) into a "safe" scroll value that's at least 1 away from the start or end because we reserve those for sensing when the user scrolls ALL the way up or down, to wrap.
-      progressToScroll = (progress) =>
-        gsap.utils.clamp(
-          1,
-          trigger.end - 1,
-          gsap.utils.wrap(0, 1, progress) * trigger.end
-        );
+      start: 0,
+      onUpdate(self) {
+        let scroll = self.scroll();
+        if (scroll > self.end - 1) {
+          wrap(1, 1);
+        } else if (scroll < 1 && self.direction < 0) {
+          wrap(-1, self.end - 1);
+        } else {
+          scrub.vars.offset =
+            (scrubber.iteration + self.progress) * seamlessLoop.duration();
+          scrub.invalidate().restart(); // to improve performance, we just invalidate and restart the same tween. No need for overwrites or creating a new tween on each update.
+        }
+      },
+      end: "+=3000",
+      pin: ".gallery",
+    });
+    // converts a progress value (0-1, but could go outside those bounds when wrapping) into a "safe" scroll value that's at least 1 away from the start or end because we reserve those for sensing when the user scrolls ALL the way up or down, to wrap.
+    const progressToScroll = (progress) =>
+      gsap.utils.clamp(
+        1,
+        trigger.end - 1,
+        gsap.utils.wrap(0, 1, progress) * trigger.end
+      );
     function wrap(iterationDelta: number, scrollTo: number) {
       scrubber.iteration += iterationDelta;
       trigger.scroll(scrollTo);
