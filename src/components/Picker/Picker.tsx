@@ -246,12 +246,14 @@ export default function Picker({}: PickerProps) {
           <li>29</li>
           <li>30</li>
         </ul>
+        <section className={"hitter"}/>
         <div className="actions">
           <button className="prev">Prev</button>
           <button className="next">Next</button>
         </div>
       </div>
       <div className="drag-proxy" />
+
     </div>
   );
 }

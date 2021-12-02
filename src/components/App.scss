@@ -23,8 +23,7 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
 }
-
-.cards li {
+.hitter {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -34,7 +33,25 @@ body {
   line-height: 18rem;
   font-size: 2rem;
   font-family: sans-serif;
-  background-color: #9d7cce;
+  //background-color: #f00;
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  border-radius: 0.8rem;
+  transform: translate(-50%, -50%);
+}
+
+.cards li {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 14rem;
+  height: 18rem;
+  text-align: center;
+  line-height: 18rem;
+  font-size: 5rem;
+  font-family: sans-serif;
+  background-color: #fff;
   position: absolute;
   top: 0;
   left: 0;
@@ -71,24 +88,24 @@ button {
   cursor: pointer;
   font-size: 13px;
   line-height: 18px;
-}
 
-button:hover {
-  background: #57a818;
-  background-image: -webkit-linear-gradient(top, #57a818, #4d9916);
-  background-image: -moz-linear-gradient(top, #57a818, #4d9916);
-  background-image: -ms-linear-gradient(top, #57a818, #4d9916);
-  background-image: -o-linear-gradient(top, #57a818, #4d9916);
-  background-image: linear-gradient(to bottom, #57a818, #4d9916);
-  text-shadow: 0 1px 0 #32610e;
-  box-shadow: 0 1px 0 #fefefe;
-  color: #ffffff;
-  text-decoration: none;
-}
+  &:hover {
+    background: #57a818;
+    background-image: -webkit-linear-gradient(top, #57a818, #4d9916);
+    background-image: -moz-linear-gradient(top, #57a818, #4d9916);
+    background-image: -ms-linear-gradient(top, #57a818, #4d9916);
+    background-image: -o-linear-gradient(top, #57a818, #4d9916);
+    background-image: linear-gradient(to bottom, #57a818, #4d9916);
+    text-shadow: 0 1px 0 #32610e;
+    box-shadow: 0 1px 0 #fefefe;
+    color: #ffffff;
+    text-decoration: none;
+  }
 
-button {
-  font-size: 20px;
-  font-weight: 400;
+  & {
+    font-size: 20px;
+    font-weight: 400;
+  }
 }
 
 a {
