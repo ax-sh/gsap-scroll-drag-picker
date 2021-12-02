@@ -106,12 +106,12 @@ export default function Picker({}: PickerProps) {
           1,
           trigger.end - 1,
           gsap.utils.wrap(0, 1, progress) * trigger.end
-        ),
-      wrap = (iterationDelta: number, scrollTo: number) => {
-        scrubber.iteration += iterationDelta;
-        trigger.scroll(scrollTo);
-        trigger.update(); // by default, when we trigger.scroll(), it waits 1 tick to update().
-      };
+        );
+    function wrap(iterationDelta: number, scrollTo: number) {
+      scrubber.iteration += iterationDelta;
+      trigger.scroll(scrollTo);
+      trigger.update(); // by default, when we trigger.scroll(), it waits 1 tick to update().
+    }
 
     // when the user stops scrolling, snap to the closest item.
     ScrollTrigger.addEventListener("scrollEnd", () =>
