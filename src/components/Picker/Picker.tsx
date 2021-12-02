@@ -119,13 +119,13 @@ export default function Picker({}: PickerProps) {
     );
 
     // feed in an offset (like a time on the seamlessLoop timeline, but it can exceed 0 and duration() in either direction; it'll wrap) and it'll set the scroll position accordingly. That'll call the onUpdate() on the trigger if there's a change.
-    function scrollToOffset(offset) {
+    function scrollToOffset(offset: number) {
       // moves the scroll playhead to the place that corresponds to the totalTime value of the seamlessLoop, and wraps if necessary.
-      let snappedTime = snapTime(offset),
-        progress =
-          (snappedTime - seamlessLoop.duration() * scrubber.iteration) /
-          seamlessLoop.duration(),
-        scroll = progressToScroll(progress);
+      const snappedTime = snapTime(offset);
+      const progress =
+        (snappedTime - seamlessLoop.duration() * scrubber.iteration) /
+        seamlessLoop.duration();
+      const scroll = progressToScroll(progress);
       if (progress >= 1 || progress < 0) {
         return wrap(Math.floor(progress), scroll);
       }
