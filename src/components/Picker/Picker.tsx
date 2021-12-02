@@ -6,54 +6,84 @@ import { Draggable } from "gsap/Draggable";
 gsap.registerPlugin(ScrollTrigger, Draggable);
 export type PickerProps = {};
 
+class DragScroll {
+  scrub;
+  constructor(seamlessLoop: gsap.core.Timeline) {
+    const playhead = { offset: 0 }; // a proxy object we use to simulate the playhead position, but it can go infinitely in either direction and we'll just use an onUpdate to convert it to the corresponding time on the seamlessLoop timeline.
+    const wrapTime = gsap.utils.wrap(0, seamlessLoop.duration()); // feed in any offset (time) and it'll return the corresponding wrapped time (a safe value between 0 and the seamlessLoop's duration)
+    this.scrub = gsap.to(playhead, {
+      // we reuse this tween to smoothly scrub the playhead on the seamlessLoop
+      offset: 0,
+      onUpdate() {
+        seamlessLoop.time(wrapTime(playhead.offset)); // convert the offset to a "safe" corresponding time on the seamlessLoop timeline
+      },
+      duration: 0.5,
+      ease: "power3",
+      paused: true,
+    });
+  }
+
+  draggable() {
+    const { scrub } = this;
+    // below is the dragging functionality (mobile-friendly too)...
+    Draggable.create(".drag-proxy", {
+      type: "x",
+      trigger: ".cards",
+      onPress() {
+        this.startOffset = scrub.vars.offset;
+      },
+      onDrag() {
+        scrub.vars.offset = this.startOffset + (this.startX - this.x) * 0.001;
+        scrub.invalidate().restart(); // same thing as we do in the ScrollTrigger's onUpdate
+      },
+      onDragEnd() {
+        // scrollToOffset(scrub.vars.offset);
+      },
+    });
+  }
+}
+
+// This function will get called for each element in the buildSeamlessLoop() function, and we just need to return an animation that'll get inserted into a master timeline, spaced
+function animateFunc(element: any) {
+  const tl = gsap.timeline();
+  tl.fromTo(
+    element,
+    { scale: 0, opacity: 0 },
+    {
+      scale: 1,
+      opacity: 1,
+      zIndex: 100,
+      duration: 0.5,
+      yoyo: true,
+      repeat: 1,
+      ease: "power1.in",
+      immediateRender: false,
+    }
+  ).fromTo(
+    element,
+    { xPercent: 400 },
+    { xPercent: -400, duration: 1, ease: "none", immediateRender: false },
+    0
+  );
+  return tl;
+}
+
 export default function Picker({}: PickerProps) {
   React.useEffect(() => {
     let iteration = 0; // gets iterated when we scroll all the way to the end or start and wraps around - allows us to smoothly continue the playhead scrubbing in the correct direction.
+    const individualCards = ".cards li";
 
     // set initial state of items
-    gsap.set(".cards li", { xPercent: 400, opacity: 0, scale: 0 });
+    gsap.set(individualCards, { xPercent: 400, opacity: 0, scale: 0 });
 
-    const spacing = 0.1, // spacing of the cards (stagger)
-      snapTime = gsap.utils.snap(spacing), // we'll use this to snapTime the playhead on the seamlessLoop
-      cards = gsap.utils.toArray(".cards li"),
-      // this function will get called for each element in the buildSeamlessLoop() function, and we just need to return an animation that'll get inserted into a master timeline, spaced
-      animateFunc = (element) => {
-        const tl = gsap.timeline();
-        tl.fromTo(
-          element,
-          { scale: 0, opacity: 0 },
-          {
-            scale: 1,
-            opacity: 1,
-            zIndex: 100,
-            duration: 0.5,
-            yoyo: true,
-            repeat: 1,
-            ease: "power1.in",
-            immediateRender: false,
-          }
-        ).fromTo(
-          element,
-          { xPercent: 400 },
-          { xPercent: -400, duration: 1, ease: "none", immediateRender: false },
-          0
-        );
-        return tl;
-      },
-      seamlessLoop = buildSeamlessLoop(cards, spacing, animateFunc),
-      playhead = { offset: 0 }, // a proxy object we use to simulate the playhead position, but it can go infinitely in either direction and we'll just use an onUpdate to convert it to the corresponding time on the seamlessLoop timeline.
-      wrapTime = gsap.utils.wrap(0, seamlessLoop.duration()), // feed in any offset (time) and it'll return the corresponding wrapped time (a safe value between 0 and the seamlessLoop's duration)
-      scrub = gsap.to(playhead, {
-        // we reuse this tween to smoothly scrub the playhead on the seamlessLoop
-        offset: 0,
-        onUpdate() {
-          seamlessLoop.time(wrapTime(playhead.offset)); // convert the offset to a "safe" corresponding time on the seamlessLoop timeline
-        },
-        duration: 0.5,
-        ease: "power3",
-        paused: true,
-      }),
-      trigger = ScrollTrigger.create({
+    const spacing = 0.1; // spacing of the cards (stagger)
+    const snapTime = gsap.utils.snap(spacing); // we'll use this to snapTime the playhead on the seamlessLoop
+    const cards = gsap.utils.toArray(individualCards);
+    const seamlessLoop = buildSeamlessLoop(cards, spacing, animateFunc);
+    const scrubber = new DragScroll(seamlessLoop);
+    const scrub = scrubber.scrub
+
+    const trigger = ScrollTrigger.create({
         start: 0,
         onUpdate(self) {
           let scroll = self.scroll();
@@ -77,7 +107,7 @@ export default function Picker({}: PickerProps) {
           trigger.end - 1,
           gsap.utils.wrap(0, 1, progress) * trigger.end
         ),
-      wrap = (iterationDelta, scrollTo) => {
+      wrap = (iterationDelta: number, scrollTo: number) => {
         iteration += iterationDelta;
         trigger.scroll(scrollTo);
         trigger.update(); // by default, when we trigger.scroll(), it waits 1 tick to update().
@@ -155,21 +185,7 @@ export default function Picker({}: PickerProps) {
       return seamlessLoop;
     }
 
-    // below is the dragging functionality (mobile-friendly too)...
-    Draggable.create(".drag-proxy", {
-      type: "x",
-      trigger: ".cards",
-      onPress() {
-        this.startOffset = scrub.vars.offset;
-      },
-      onDrag() {
-        scrub.vars.offset = this.startOffset + (this.startX - this.x) * 0.001;
-        scrub.invalidate().restart(); // same thing as we do in the ScrollTrigger's onUpdate
-      },
-      onDragEnd() {
-        scrollToOffset(scrub.vars.offset);
-      },
-    });
+    scrubber.draggable();
 
     // if you want a more efficient timeline, but it's a bit more complex to follow the code, use this function instead...
     // function buildSeamlessLoop(items, spacing, animateFunc) {
@@ -246,14 +262,13 @@ export default function Picker({}: PickerProps) {
           <li>29</li>
           <li>30</li>
         </ul>
-        <section className={"hitter"}/>
+        <section className={"hitter"} />
         <div className="actions">
           <button className="prev">Prev</button>
           <button className="next">Next</button>
         </div>
       </div>
       <div className="drag-proxy" />
-
     </div>
   );
 }
