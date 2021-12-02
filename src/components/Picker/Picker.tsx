@@ -7,7 +7,7 @@ gsap.registerPlugin(ScrollTrigger, Draggable);
 export type PickerProps = {};
 
 class DragScroll {
-  iteration = 0; // gets iterated when we scroll all the way to the end or start and wraps around - allows us to smoothly continue the playhead scrubbing in the correct direction.
+  iteration: number = 0; // gets iterated when we scroll all the way to the end or start and wraps around - allows us to smoothly continue the playhead scrubbing in the correct direction.
   scrub: gsap.core.Tween;
   seamlessLoop: gsap.core.Timeline;
   constructor(seamlessLoop: gsap.core.Timeline) {
@@ -71,7 +71,7 @@ function animateFunc(element: any) {
   return tl;
 }
 
-export default function Picker({}: PickerProps) {
+export default function Picker() {
   React.useEffect(() => {
     const individualCards = ".cards li";
 
@@ -80,9 +80,9 @@ export default function Picker({}: PickerProps) {
 
     const spacing = 0.1; // spacing of the cards (stagger)
     const snapTime = gsap.utils.snap(spacing); // we'll use this to snapTime the playhead on the seamlessLoop
-    const cards = gsap.utils.toArray(individualCards);
-    const seamlessLoop = buildSeamlessLoop(cards, spacing, animateFunc);
-    const scrubber = new DragScroll(seamlessLoop);
+    const cards = gsap.utils.toArray<Element>(individualCards);
+    const seamlessLoopTimeline = buildSeamlessLoop(cards, spacing, animateFunc);
+    const scrubber = new DragScroll(seamlessLoopTimeline);
     const scrub = scrubber.scrub;
 
     const trigger = ScrollTrigger.create({
@@ -95,7 +95,7 @@ export default function Picker({}: PickerProps) {
           wrap(-1, self.end - 1);
         } else {
           scrub.vars.offset =
-            (scrubber.iteration + self.progress) * seamlessLoop.duration();
+            (scrubber.iteration + self.progress) * seamlessLoopTimeline.duration();
           scrub.invalidate().restart(); // to improve performance, we just invalidate and restart the same tween. No need for overwrites or creating a new tween on each update.
         }
       },
@@ -126,8 +126,8 @@ export default function Picker({}: PickerProps) {
       // moves the scroll playhead to the place that corresponds to the totalTime value of the seamlessLoop, and wraps if necessary.
       const snappedTime = snapTime(offset);
       const progress =
-        (snappedTime - seamlessLoop.duration() * scrubber.iteration) /
-        seamlessLoop.duration();
+        (snappedTime - seamlessLoopTimeline.duration() * scrubber.iteration) /
+          seamlessLoopTimeline.duration();
       const scroll = progressToScroll(progress);
       if (progress >= 1 || progress < 0) {
         return wrap(Math.floor(progress), scroll);
@@ -141,29 +141,29 @@ export default function Picker({}: PickerProps) {
     document.querySelector(".next").addEventListener("click", next);
     document.querySelector(".prev").addEventListener("click", prev);
 
-    function buildSeamlessLoop(items, spacing, animateFunc) {
-      let rawSequence = gsap.timeline({ paused: true }), // this is where all the "real" animations live
-        seamlessLoop = gsap.timeline({
-          // this merely scrubs the playhead of the rawSequence so that it appears to seamlessly loop
-          paused: true,
-          repeat: -1, // to accommodate infinite scrolling/looping
-          onRepeat() {
-            // works around a super rare edge case bug that's fixed GSAP 3.6.1
-            this._time === this._dur && (this._tTime += this._dur - 0.01);
-          },
-          onReverseComplete() {
-            this.totalTime(this.rawTime() + this.duration() * 100); // seamless looping backwards
-          },
-        }),
-        cycleDuration = spacing * items.length,
-        dur; // the duration of just one animateFunc() (we'll populate it in the .forEach() below...
+    function buildSeamlessLoop(items: Element[], itemSpacing, animateFunction) {
+      const rawSequence = gsap.timeline({ paused: true }); // this is where all the "real" animations live
+      const seamlessLoop = gsap.timeline({
+        // this merely scrubs the playhead of the rawSequence so that it appears to seamlessly loop
+        paused: true,
+        repeat: -1, // to accommodate infinite scrolling/looping
+        onRepeat() {
+          // works around a super rare edge case bug that's fixed GSAP 3.6.1
+          this._time === this._dur && (this._tTime += this._dur - 0.01);
+        },
+        onReverseComplete() {
+          this.totalTime(this.rawTime() + this.duration() * 100); // seamless looping backwards
+        },
+      });
+      const cycleDuration = itemSpacing * items.length;
+      let dur: number; // the duration of just one animateFunc() (we'll populate it in the .forEach() below...
 
       // loop through 3 times so we can have an extra cycle at the start and end - we'll scrub the playhead only on the 2nd cycle
       items
         .concat(items)
         .concat(items)
-        .forEach((item, i) => {
-          let anim = animateFunc(items[i % items.length]);
+        .forEach((item: Element, i: number) => {
+          let anim = animateFunction(items[i % items.length]);
           rawSequence.add(anim, i * spacing);
           dur || (dur = anim.duration());
         });
