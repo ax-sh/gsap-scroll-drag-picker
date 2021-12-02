@@ -4,7 +4,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Draggable } from "gsap/Draggable";
 
 gsap.registerPlugin(ScrollTrigger, Draggable);
-export type PickerProps = {};
 
 class DragScroll {
   iteration: number = 0; // gets iterated when we scroll all the way to the end or start and wraps around - allows us to smoothly continue the playhead scrubbing in the correct direction.
@@ -95,7 +94,8 @@ export default function Picker() {
           wrap(-1, self.end - 1);
         } else {
           scrub.vars.offset =
-            (scrubber.iteration + self.progress) * seamlessLoopTimeline.duration();
+            (scrubber.iteration + self.progress) *
+            seamlessLoopTimeline.duration();
           scrub.invalidate().restart(); // to improve performance, we just invalidate and restart the same tween. No need for overwrites or creating a new tween on each update.
         }
       },
@@ -113,7 +113,7 @@ export default function Picker() {
     function wrap(iterationDelta: number, scrollTo: number) {
       scrubber.iteration += iterationDelta;
       trigger.scroll(scrollTo);
-      trigger.update(); // by default, when we trigger.scroll(), it waits 1 tick to update().
+      ScrollTrigger.update(); // by default, when we trigger.scroll(), it waits 1 tick to update().
     }
 
     // when the user stops scrolling, snap to the closest item.
@@ -127,7 +127,7 @@ export default function Picker() {
       const snappedTime = snapTime(offset);
       const progress =
         (snappedTime - seamlessLoopTimeline.duration() * scrubber.iteration) /
-          seamlessLoopTimeline.duration();
+        seamlessLoopTimeline.duration();
       const scroll = progressToScroll(progress);
       if (progress >= 1 || progress < 0) {
         return wrap(Math.floor(progress), scroll);
@@ -141,7 +141,11 @@ export default function Picker() {
     document.querySelector(".next").addEventListener("click", next);
     document.querySelector(".prev").addEventListener("click", prev);
 
-    function buildSeamlessLoop(items: Element[], itemSpacing, animateFunction) {
+    function buildSeamlessLoop(
+      items: Element[],
+      itemSpacing: number,
+      animateFunction: any
+    ) {
       const rawSequence = gsap.timeline({ paused: true }); // this is where all the "real" animations live
       const seamlessLoop = gsap.timeline({
         // this merely scrubs the playhead of the rawSequence so that it appears to seamlessly loop
