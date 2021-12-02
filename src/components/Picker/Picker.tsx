@@ -7,6 +7,7 @@ gsap.registerPlugin(ScrollTrigger, Draggable);
 export type PickerProps = {};
 
 class DragScroll {
+  iteration = 0; // gets iterated when we scroll all the way to the end or start and wraps around - allows us to smoothly continue the playhead scrubbing in the correct direction.
   scrub;
   constructor(seamlessLoop: gsap.core.Timeline) {
     const playhead = { offset: 0 }; // a proxy object we use to simulate the playhead position, but it can go infinitely in either direction and we'll just use an onUpdate to convert it to the corresponding time on the seamlessLoop timeline.
@@ -70,7 +71,6 @@ function animateFunc(element: any) {
 
 export default function Picker({}: PickerProps) {
   React.useEffect(() => {
-    let iteration = 0; // gets iterated when we scroll all the way to the end or start and wraps around - allows us to smoothly continue the playhead scrubbing in the correct direction.
     const individualCards = ".cards li";
 
     // set initial state of items
@@ -81,7 +81,7 @@ export default function Picker({}: PickerProps) {
     const cards = gsap.utils.toArray(individualCards);
     const seamlessLoop = buildSeamlessLoop(cards, spacing, animateFunc);
     const scrubber = new DragScroll(seamlessLoop);
-    const scrub = scrubber.scrub
+    const scrub = scrubber.scrub;
 
     const trigger = ScrollTrigger.create({
         start: 0,
@@ -93,7 +93,7 @@ export default function Picker({}: PickerProps) {
             wrap(-1, self.end - 1);
           } else {
             scrub.vars.offset =
-              (iteration + self.progress) * seamlessLoop.duration();
+              (scrubber.iteration + self.progress) * seamlessLoop.duration();
             scrub.invalidate().restart(); // to improve performance, we just invalidate and restart the same tween. No need for overwrites or creating a new tween on each update.
           }
         },
@@ -108,7 +108,7 @@ export default function Picker({}: PickerProps) {
           gsap.utils.wrap(0, 1, progress) * trigger.end
         ),
       wrap = (iterationDelta: number, scrollTo: number) => {
-        iteration += iterationDelta;
+        scrubber.iteration += iterationDelta;
         trigger.scroll(scrollTo);
         trigger.update(); // by default, when we trigger.scroll(), it waits 1 tick to update().
       };
@@ -123,7 +123,7 @@ export default function Picker({}: PickerProps) {
       // moves the scroll playhead to the place that corresponds to the totalTime value of the seamlessLoop, and wraps if necessary.
       let snappedTime = snapTime(offset),
         progress =
-          (snappedTime - seamlessLoop.duration() * iteration) /
+          (snappedTime - seamlessLoop.duration() * scrubber.iteration) /
           seamlessLoop.duration(),
         scroll = progressToScroll(progress);
       if (progress >= 1 || progress < 0) {
